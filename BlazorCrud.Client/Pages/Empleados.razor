@@ -1,0 +1,86 @@
+﻿@page "/empleados"
+@using BlazorCrud.Shared
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using BlazorCrud.Client.Services;
+
+@inject SweetAlertService Swal;
+@inject IEmpleado empleado;
+
+
+<h3>Empleados</h3>
+
+<a class="btn btn-success btn-sm mb-3" href="empleado">Nuevo Empleado</a>
+<div class="card">
+    <table class="table table-striped align-middle table-bordered">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Departamento</th>
+            <th>Sueldo</th>
+            <th>Fecha Ingreso</th>
+            <th>Opciones</th>
+        </tr>
+    </thead>
+    <tbody>
+            @if(listaempleado == null)
+            {
+                <tr colspan ="5" align="center">
+                    <td colspan="5">
+                        No hay empleados registrado
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach(var l in listaempleado)
+                {
+                    <tr>
+                        <td>@l.Nombre</td>
+                        <td>@l.Departamento!.Descripcion</td>
+                        <td>@l.Sueldo</td>
+                        <td>@l.FechaIngreso.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <a class="btn btn-primary btn-sm" href="empleado/@l.IdEmpleado">
+                                <i class="oi oi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-danger btn-sm ms-2" @onclick="(()=> Eliminar(l.IdEmpleado))">
+                                <i class="oi oi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }            
+        </tbody>
+</table>
+</div>
+
+@code {
+
+    List<EmpleadoDTO>? listaempleado = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaempleado = await empleado.Lista();
+    }
+
+    private async Task Eliminar(int id)
+    {
+        var resultado = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Eliminar Empleado",
+                Text = "Desea Eliminar El Empleado?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true
+        });
+
+        if (resultado.IsConfirmed)
+        {
+            var eliminado = await empleado.Eliminar(id);
+            if (eliminado)
+            {
+                listaempleado = listaempleado!.FindAll(e=>e.IdEmpleado != id);
+            }
+        }
+    }
+
+}

@@ -1,0 +1,116 @@
+﻿@page "/empleado"
+@page "/empleado/{idEmpleado:int}"
+
+@using BlazorCrud.Shared
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using BlazorCrud.Client.Services;
+
+@inject IEmpleado empleado;
+@inject IDepartamento departamento;
+@inject NavigationManager navegacion;
+
+<h1>@Titulo Empleado</h1>
+<hr />
+
+<EditForm Model="empleadoNew" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label for="Name" class="form-label">Nombre:</label>
+        <div class="col-md-4">
+            <InputText class="form-control" @bind-Value="empleadoNew.Nombre" />
+        </div>
+        <ValidationMessage For="@(() => empleadoNew.Nombre)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="Name" class="form-label">Departamento:</label>
+        <div class="col-md-4">
+            <InputSelect class="form-select" @bind-Value="empleadoNew.IdDepartamento">
+                <option value="0">--Seleccionar--</option>
+                @foreach(var item in listaDepartamento)
+                {
+                    <option value="@item.IdDepartamento">@item.Descripcion</option>
+                }
+            </InputSelect> 
+        </div>
+        <ValidationMessage For="@(() => empleadoNew.IdDepartamento)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="Name" class="form-label">Sueldo:</label>
+        <div class="col-md-4">
+            <InputNumber class="form-control" @bind-Value="empleadoNew.Sueldo" />
+        </div>
+        <ValidationMessage For="@(() => empleadoNew.Sueldo)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="Name" class="form-label">Fecha Ingreso:</label>
+        <div class="col-md-4">
+            <InputDate class="form-control" @bind-Value="empleadoNew.FechaIngreso" />
+        </div>
+        <ValidationMessage For="@(() => empleadoNew.FechaIngreso)" />
+    </div>
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">@btnTexto</button>
+        <button class="btn btn-light" @onclick="Cancel">Cancelar</button>
+    </div>
+
+
+</EditForm>
+
+
+@code {
+
+    [Parameter] 
+    public int idEmpleado { get; set; } = 0;
+
+    protected string Titulo = "Nuevo";
+    string btnTexto = string.Empty;
+
+    EmpleadoDTO empleadoNew = new EmpleadoDTO();
+    List<DepartamentoDTO> listaDepartamento = new List<DepartamentoDTO>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (idEmpleado != 0)
+        {
+            Titulo = "Editar";
+            empleadoNew = await empleado.Buscar(idEmpleado);
+            btnTexto = "Actualizar";
+        }
+        else
+        {
+            empleadoNew.FechaIngreso = DateTime.Today;
+            btnTexto = "Nuevo";
+        }
+
+        listaDepartamento = await departamento.ListaDepartamento();
+    }
+
+    public async Task OnValidSubmit()
+    {
+        int idDevulto = 0;
+        if(idEmpleado == 0)
+        {
+            idDevulto = await empleado.Guardar(empleadoNew);
+        }
+        else
+        {
+            idDevulto = await empleado.Actualizar(empleadoNew);
+        }
+
+        if (idDevulto != 0)
+        {
+            navegacion.NavigateTo("/empleados");
+        }
+        
+    }
+
+    public void Cancel()
+    {
+        navegacion.NavigateTo("/empleados");
+    }
+
+}
